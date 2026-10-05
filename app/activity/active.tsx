@@ -7,6 +7,8 @@ import {
   View,
 } from 'react-native';
 
+import { saveActivity } from '@/services/storage';
+
 import MapView, {
   Marker,
   Polyline,
@@ -28,6 +30,7 @@ import {
 import type {
   ActivityType,
   RoutePoint,
+  StoredActivity,
 } from '@/types/activity';
 
 export default function ActiveActivityScreen() {
@@ -221,14 +224,45 @@ export default function ActiveActivityScreen() {
     }
 
     Alert.alert(
-      'Actividad finalizada',
+      'Finalizar actividad',
       `Tiempo: ${formatTime(elapsedSeconds)}\nDistancia: ${distanceKm.toFixed(
         2
       )} km\nCalorías: ${calories} kcal`,
       [
         {
-          text: 'Aceptar',
-          onPress: () => router.replace('/'),
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Guardar',
+          onPress: async () => {
+            const activity: StoredActivity = {
+              id: `${startedAt}-${Date.now()}`,
+              type: activityType,
+              startedAt,
+              finishedAt: Date.now(),
+              durationSeconds: elapsedSeconds,
+              distanceKm,
+              calories,
+              route,
+            };
+
+            try {
+              await saveActivity(activity);
+
+              router.replace('/');
+
+              Alert.alert(
+                'Actividad guardada',
+                'La actividad fue agregada al historial.'
+              );
+            } catch {
+              Alert.alert(
+                'Error',
+                'No se pudo guardar la actividad.'
+              );
+            }
+          },
         },
       ]
     );

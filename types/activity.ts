@@ -11,3 +11,14 @@ export type ActiveActivity = {
   startedAt: number;
   route: RoutePoint[];
 };
+
+export type StoredActivity = {
+  id: string;
+  type: ActivityType;
+  startedAt: number;
+  finishedAt: number;
+  durationSeconds: number;
+  distanceKm: number;
+  calories: number;
+  route: RoutePoint[];
+};

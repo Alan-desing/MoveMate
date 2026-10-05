@@ -19,7 +19,7 @@ import AnimatedStat from '@/components/AnimatedStat';
 import FloatingStartButton from '@/components/FloatingStartButton';
 import ActivityTypeModal from '@/components/ActivityTypeModal';
 
-type ActivityType = 'walk' | 'run' | 'bike';
+import type { ActivityType } from '@/types/activity';
 
 export default function HomeScreen() {
   const router = useRouter();
