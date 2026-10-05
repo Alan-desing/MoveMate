@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useRouter } from 'expo-router';
 import {
   ScrollView,
   StyleSheet,
@@ -21,6 +22,8 @@ import ActivityTypeModal from '@/components/ActivityTypeModal';
 type ActivityType = 'walk' | 'run' | 'bike';
 
 export default function HomeScreen() {
+  const router = useRouter();
+
   const { theme } = useAppTheme();
 
   const colors = Colors[theme];
@@ -32,6 +35,13 @@ export default function HomeScreen() {
   const handleSelectActivity = (type: ActivityType) => {
     setSelectedActivity(type);
     setActivityModalVisible(false);
+
+    router.push({
+      pathname: '/activity/active',
+      params: {
+        type,
+      },
+    });
   };
 
   const getActivityName = () => {

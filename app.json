@@ -11,6 +11,7 @@
       "supportsTablet": true
     },
     "android": {
+        "package": "com.alanbissio.movemate",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -32,6 +33,12 @@
           "image": "./assets/images/splash-icon.png",
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "MoveMate necesita tu ubicación para registrar el recorrido de tus actividades."
         }
       ]
     ],
