@@ -1,5 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 
+import { useAuth } from '@/hooks/useAuth';
+
 import {
   Pressable,
   RefreshControl,
@@ -8,6 +10,11 @@ import {
   Text,
   View,
 } from 'react-native';
+
+import {
+  deleteActivityFromCloud,
+  getActivitiesFromCloud,
+} from '@/services/cloudActivities';
 
 import { useFocusEffect } from 'expo-router';
 
@@ -19,6 +26,7 @@ import { useAppTheme } from '@/hooks/useAppTheme';
 import {
   deleteActivity,
   getActivities,
+  saveActivity,
 } from '@/services/storage';
 
 import type {
@@ -37,6 +45,8 @@ type DateFilter =
 export default function HistoryScreen() {
   const { theme } = useAppTheme();
 
+  const { user } = useAuth();
+
   const colors = Colors[theme];
 
   const [activities, setActivities] = useState<StoredActivity[]>([]);
@@ -50,10 +60,32 @@ export default function HistoryScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const loadActivities = useCallback(async () => {
-    const storedActivities = await getActivities();
+    let storedActivities = await getActivities(user?.uid);
+
+    if (user) {
+      try {
+        const cloudActivities =
+          await getActivitiesFromCloud(user.uid);
+
+        for (const activity of cloudActivities) {
+          await saveActivity(
+            activity,
+            user.uid
+          );
+        }
+
+        storedActivities =
+          await getActivities(user.uid);
+      } catch (error) {
+        console.error(
+          'Error al recuperar actividades de Firebase:',
+          error
+        );
+      }
+    }
 
     setActivities(storedActivities);
-  }, []);
+  }, [user]);
 
   useFocusEffect(
     useCallback(() => {
@@ -69,12 +101,31 @@ export default function HistoryScreen() {
     setRefreshing(false);
   };
 
-  const handleDelete = async (activityId: string) => {
-    await deleteActivity(activityId);
+  const handleDelete = async (
+    activityId: string
+  ) => {
+    await deleteActivity(
+      activityId,
+      user?.uid
+    );
+
+    if (user) {
+      try {
+        await deleteActivityFromCloud(
+          activityId
+        );
+      } catch (error) {
+        console.error(
+          'Error al eliminar actividad de Firebase:',
+          error
+        );
+      }
+    }
 
     setActivities((current) =>
       current.filter(
-        (activity) => activity.id !== activityId
+        (activity) =>
+          activity.id !== activityId
       )
     );
   };

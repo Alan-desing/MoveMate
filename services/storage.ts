@@ -2,11 +2,21 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { StoredActivity } from '@/types/activity';
 
-const ACTIVITIES_STORAGE_KEY = 'movemate_activities';
+function getStorageKey(userId?: string | null) {
+  if (userId) {
+    return `movemate_activities_${userId}`;
+  }
 
-export async function getActivities(): Promise<StoredActivity[]> {
+  return 'movemate_activities_guest';
+}
+
+export async function getActivities(
+  userId?: string | null
+): Promise<StoredActivity[]> {
   try {
-    const stored = await AsyncStorage.getItem(ACTIVITIES_STORAGE_KEY);
+    const storageKey = getStorageKey(userId);
+
+    const stored = await AsyncStorage.getItem(storageKey);
 
     if (!stored) {
       return [];
@@ -18,38 +28,52 @@ export async function getActivities(): Promise<StoredActivity[]> {
       (a, b) => b.startedAt - a.startedAt
     );
   } catch (error) {
-    console.error('Error al cargar actividades:', error);
+    console.error(
+      'Error al cargar actividades:',
+      error
+    );
+
     return [];
   }
 }
 
 export async function saveActivity(
-  activity: StoredActivity
+  activity: StoredActivity,
+  userId?: string | null
 ): Promise<void> {
-  const activities = await getActivities();
+  const storageKey = getStorageKey(userId);
+
+  const activities = await getActivities(userId);
 
   const updatedActivities = [
     activity,
-    ...activities.filter((item) => item.id !== activity.id),
+    ...activities.filter(
+      (item) => item.id !== activity.id
+    ),
   ];
 
   await AsyncStorage.setItem(
-    ACTIVITIES_STORAGE_KEY,
+    storageKey,
     JSON.stringify(updatedActivities)
   );
 }
 
 export async function deleteActivity(
-  activityId: string
+  activityId: string,
+  userId?: string | null
 ): Promise<void> {
-  const activities = await getActivities();
+  const storageKey = getStorageKey(userId);
 
-  const updatedActivities = activities.filter(
-    (activity) => activity.id !== activityId
-  );
+  const activities = await getActivities(userId);
+
+  const updatedActivities =
+    activities.filter(
+      (activity) =>
+        activity.id !== activityId
+    );
 
   await AsyncStorage.setItem(
-    ACTIVITIES_STORAGE_KEY,
+    storageKey,
     JSON.stringify(updatedActivities)
   );
 }

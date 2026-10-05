@@ -12,6 +12,8 @@ import {
   useAppTheme,
 } from '@/hooks/useAppTheme';
 
+import { AuthProvider } from '@/hooks/useAuth';
+
 function AppNavigation() {
   const { theme } = useAppTheme();
 
@@ -34,7 +36,9 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AppThemeProvider>
-        <AppNavigation />
+        <AuthProvider>
+          <AppNavigation />
+        </AuthProvider>
       </AppThemeProvider>
     </GestureHandlerRootView>
   );

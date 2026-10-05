@@ -9,6 +9,8 @@ import {
 
 import { saveActivity } from '@/services/storage';
 
+import { saveActivityToCloud } from '@/services/cloudActivities';
+
 import MapView, {
   Marker,
   Polyline,
@@ -33,8 +35,12 @@ import type {
   StoredActivity,
 } from '@/types/activity';
 
+import { useAuth } from '@/hooks/useAuth';
+
 export default function ActiveActivityScreen() {
   const router = useRouter();
+
+  const { user } = useAuth();
 
   const params = useLocalSearchParams<{
     type?: string;
@@ -248,7 +254,24 @@ export default function ActiveActivityScreen() {
             };
 
             try {
-              await saveActivity(activity);
+              await saveActivity(
+                activity,
+                user?.uid
+              );
+
+              if (user) {
+                try {
+                  await saveActivityToCloud(
+                    activity,
+                    user.uid
+                  );
+                } catch (error) {
+                  console.error(
+                    'Error al sincronizar con Firebase:',
+                    error
+                  );
+                }
+              }
 
               router.replace('/');
 
