@@ -11,12 +11,7 @@ import { saveActivity } from '@/services/storage';
 
 import { saveActivityToCloud } from '@/services/cloudActivities';
 
-import MapView, {
-  Marker,
-  Polyline,
-  PROVIDER_GOOGLE,
-  Region,
-} from 'react-native-maps';;
+import ActivityMap from '@/components/ActivityMap';
 
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
@@ -49,7 +44,6 @@ export default function ActiveActivityScreen() {
   const { theme } = useAppTheme();
   const colors = Colors[theme];
 
-  const mapRef = useRef<MapView | null>(null);
   const subscriptionRef = useRef<{
     remove: () => void;
   } | null>(null);
@@ -106,16 +100,6 @@ export default function ActiveActivityScreen() {
         setCurrentPosition(initialPoint);
         setRoute([initialPoint]);
 
-        mapRef.current?.animateToRegion(
-          {
-            latitude: initialPoint.latitude,
-            longitude: initialPoint.longitude,
-            latitudeDelta: 0.008,
-            longitudeDelta: 0.008,
-          },
-          500
-        );
-
         subscriptionRef.current = await watchUserLocation((location) => {
           const point: RoutePoint = {
             latitude: location.coords.latitude,
@@ -124,13 +108,6 @@ export default function ActiveActivityScreen() {
           };
 
           setCurrentPosition(point);
-
-          mapRef.current?.animateCamera({
-            center: {
-                latitude: point.latitude,
-                longitude: point.longitude,
-            },
-            });
 
           setRoute((currentRoute) => {
             const lastPoint = currentRoute[currentRoute.length - 1];
@@ -179,13 +156,6 @@ export default function ActiveActivityScreen() {
 
     return () => clearInterval(timer);
   }, [startedAt]);
-
-  const initialRegion: Region = {
-    latitude: currentPosition?.latitude ?? -34.6037,
-    longitude: currentPosition?.longitude ?? -58.3816,
-    latitudeDelta: 0.02,
-    longitudeDelta: 0.02,
-  };
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
@@ -301,41 +271,12 @@ export default function ActiveActivityScreen() {
       ]}
     >
       <View style={styles.mapContainer}>
-        <MapView
-          ref={mapRef}
-          provider={PROVIDER_GOOGLE}
-          mapType="standard"
-          style={StyleSheet.absoluteFill}
-          initialRegion={initialRegion}
-          showsUserLocation={permissionGranted}
-          showsMyLocationButton
-          zoomEnabled
-          scrollEnabled
-          pitchEnabled
-          rotateEnabled
-        >
-          {route.length > 1 ? (
-            <Polyline
-              coordinates={route.map((point) => ({
-                latitude: point.latitude,
-                longitude: point.longitude,
-              }))}
-              strokeColor={colors.primary}
-              strokeWidth={5}
-            />
-          ) : null}
-
-          {route.length > 0 ? (
-            <Marker
-              coordinate={{
-                latitude: route[0].latitude,
-                longitude: route[0].longitude,
-              }}
-              title="Inicio"
-            />
-          ) : null}
-        </MapView>
-
+        <ActivityMap
+          currentPosition={currentPosition}
+          route={route}
+          primaryColor={colors.primary}
+        />
+        
         {loadingLocation ? (
           <View style={styles.loadingOverlay}>
             <Text style={styles.loadingText}>
